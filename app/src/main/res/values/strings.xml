@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">DontecoTestAssignment</string>
+    <string name="crossfade_seconds">Crossfade seconds: %1$s</string>
+    <string name="first_sound">First sound</string>
+    <string name="second_sound">Second sound</string>
+    <string name="choose_second_sound">Choose second sound</string>
+    <string name="choose_first_sound">Choose first sound</string>
+    <string name="audio_duration_too_short">Audio duration shorter than crossfade duration</string>
+</resources>
