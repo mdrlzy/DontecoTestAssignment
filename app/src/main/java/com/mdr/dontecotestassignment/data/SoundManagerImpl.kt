@@ -36,24 +36,33 @@ class SoundManagerImpl(private val context: Context) : SoundManager {
         val crossFadeMs = (crossFadeSeconds * 1000).toLong()
 
         if (mediaPlayer1!!.duration < crossFadeMs * 2 ||
-            mediaPlayer2!!.duration < crossFadeMs * 2)
+            mediaPlayer2!!.duration < crossFadeMs * 2
+        )
             return@withContext false
 
-        loopJob = loop(scope, crossFadeMs)
+        loopJob = loop(sound1, sound2, crossFadeMs, scope)
         return@withContext true
     }
 
-    private fun loop(scope: CoroutineScope, crossFadeMs: Long) =
-        scope.launch(Dispatchers.IO) {
-            val timeToWait1 = mediaPlayer1!!.duration - crossFadeMs
-            val timeToWait2 = mediaPlayer2!!.duration - crossFadeMs
-            while (isActive) {
-                fadeInOutAudioStart(mediaPlayer1!!, crossFadeMs)
-                delay(timeToWait1)
-                fadeInOutAudioStart(mediaPlayer2!!, crossFadeMs)
-                delay(timeToWait2)
-            }
+    private fun loop(
+        sound1: Sound,
+        sound2: Sound,
+        crossFadeMs: Long,
+        scope: CoroutineScope,
+    ) = scope.launch(Dispatchers.IO) {
+        val timeToWait1 = mediaPlayer1!!.duration - crossFadeMs
+        val timeToWait2 = mediaPlayer2!!.duration - crossFadeMs
+        while (isActive) {
+            mediaPlayer1?.release()
+            mediaPlayer1 = MediaPlayer.create(context, sound1.uri.toUri())
+            fadeInOutAudioStart(mediaPlayer1!!, crossFadeMs)
+            delay(timeToWait1)
+            mediaPlayer2?.release()
+            mediaPlayer2 = MediaPlayer.create(context, sound2.uri.toUri())
+            fadeInOutAudioStart(mediaPlayer2!!, crossFadeMs)
+            delay(timeToWait2)
         }
+    }
 
     override suspend fun stop() = withContext(Dispatchers.IO) {
         loopJob?.cancelAndJoin()
@@ -80,8 +89,8 @@ class SoundManagerImpl(private val context: Context) : SoundManager {
             .setInterpolatorType(VolumeShaper.Configuration.INTERPOLATOR_TYPE_LINEAR)
             .build()
         val volumeShaper = mediaPlayer.createVolumeShaper(config)
-        mediaPlayer.seekTo(0)
         mediaPlayer.start()
         volumeShaper.apply(VolumeShaper.Operation.PLAY)
     }
+
 }
